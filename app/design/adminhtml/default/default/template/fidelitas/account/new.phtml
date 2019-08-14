@@ -1,0 +1,40 @@
+<div id="messages">
+    <ul class="messages">
+        <li class="notice-msg">
+            <ul>
+                <li>
+                    <span><?php echo Mage::helper('fidelitas')->__('If you already have an E-Goi account please ') ?></span>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<form action="<?php echo $this->getLoadUrl() ?>" method="post" id="email_template_load_form">
+    <?php echo $this->getBlockHtml('formkey') ?>
+    <div class="entry-edit">
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend">
+                <?php echo Mage::helper('fidelitas')->__('Existing E-Goi Customers') ?>
+            </h4>
+            <div class="form-buttons"></div>
+        </div>
+        <div class="fieldset">
+            <table class="form-list" cellspacing="0">
+                <tbody>
+                <tr>
+                    <td class="label"><label for="telephone">API Key
+                            <span class="required">*</span></label></td>
+                    <td class="value">
+                        <input type="text" class="input-text" value="" name="telephone" id="telephone">
+                        <p id="note_telephone" class="note"><span>To get your API Key, login in your E-Goi.com panel and under "LISTS/OPTIONS/API" you will find your "API access key" </span>
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+<?php
+echo $this->getFormHtml();

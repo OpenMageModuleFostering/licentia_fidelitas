@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<config>
+    <sections>
+        <fidelitas translate="label" module="fidelitas">
+            <label>E-Goi Email Marketing</label>
+            <tab>general</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>1000</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <config translate="label">
+                    <label>Configuration</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <analytics translate="label">
+                            <label>E-Goi Track &amp; Engage</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </analytics>
+                        <auto>
+                            <label>Automatically subscribe customer after order</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <required>1</required>
+                        </auto>
+                        <cellphone>
+                            <label>Cellphone Attribute Code</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>fidelitas/source_addressattributes</source_model>
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <required>1</required>
+                            <comment>Assing the Address Attribute Code to customer's cellphone. Usually "telephone" or "mobile"</comment>
+                        </cellphone>
+                        <sender>
+                            <label>SMS Sender (For autoresponders)</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>fidelitas/source_sender</source_model>
+                            <sort_order>40</sort_order>
+                            <comment>Only validated SMS senders are listed here. To add one, please go to your e-goi.com account</comment>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </sender>
+                        <method>
+                            <label>Send SMS using</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>fidelitas/source_method</source_model>
+                            <sort_order>50</sort_order>
+                            <comment>If your plan includes SMS's, you should choose the Campaign option</comment>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </method>
+                        <merge>
+                            <label>Merge Subscribers</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>150</sort_order>
+                            <comment>Id we should sync back subscribers from E-Goi (only affetcs cron and not callbacks)</comment>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </merge>
+                    </fields>
+                </config>
+                <test translate="label">
+                    <label>Test SMS Configuration</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>100</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <expanded>1</expanded>
+                    <fields>
+                        <number>
+                            <label>Mobile Number</label>
+                            <frontend_type>text</frontend_type>
+                            <comment>Format: CC-XXXXXXX. Eg: 351-908934778. The above phone number will receive a test Message</comment>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </number>
+                        <test translate="label">
+                            <label></label>
+                            <frontend_type>label</frontend_type>
+                            <frontend_model>fidelitas/adminhtml_system_config_form_field_test</frontend_model>
+                            <comment>Please remember to save any changes prior to testing</comment>
+                            <sort_order>13</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </test>
+                    </fields>
+                </test>
+            </groups>
+        </fidelitas>
+    </sections>
+</config>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <menu>
+        <fidelitas>
+            <title>E-Goi</title>
+            <sort_order>72</sort_order>
+            <children>
+                <account translate="title" module="fidelitas">
+                    <title>My Account</title>
+                    <sort_order>10</sort_order>
+                    <action>adminhtml/fidelitas_account</action>
+                </account>
+                <lists translate="title" module="fidelitas">
+                    <title>List</title>
+                    <sort_order>10</sort_order>
+                    <action>adminhtml/fidelitas_lists</action>
+                </lists>
+                <subscribers>
+                    <title>Subscribers</title>
+                    <sort_order>50</sort_order>
+                    <action>adminhtml/fidelitas_subscribers</action>
+                </subscribers>
+                <autoresponders>
+                    <title>SMS Autoresponders</title>
+                    <sort_order>60</sort_order>
+                    <action>adminhtml/fidelitas_autoresponders</action>
+                </autoresponders>
+                <events>
+                    <title>SMS Autoresponders Log</title>
+                    <sort_order>70</sort_order>
+                    <action>adminhtml/fidelitas_events</action>
+                </events>
+                <support>
+                    <title>Support</title>
+                    <sort_order>80</sort_order>
+                    <action>adminhtml/fidelitas_account/support</action>
+                </support>
+                <configuration>
+                    <title>Configuration</title>
+                    <sort_order>90</sort_order>
+                    <action>adminhtml/system_config/edit/section/fidelitas</action>
+                </configuration>
+            </children>
+        </fidelitas>
+    </menu>
+    <acl>
+        <resources>
+            <admin>
+                <children>
+                    <fidelitas>
+                        <title>E-goi</title>
+                        <sort_order>72</sort_order>
+                        <children>
+                            <account>
+                                <title>My Account</title>
+                                <sort_order>10</sort_order>
+                            </account>
+                            <lists>
+                                <title>List</title>
+                                <sort_order>10</sort_order>
+                            </lists>
+                            <subscribers>
+                                <title>Subscribers</title>
+                                <sort_order>50</sort_order>
+                            </subscribers>
+                            <autoresponders>
+                                <title>SMS Autoresponders</title>
+                                <sort_order>60</sort_order>
+                            </autoresponders>
+                            <events>
+                                <title>SMS Autoresponders Log</title>
+                                <sort_order>70</sort_order>
+                            </events>
+                            <support>
+                                <title>Support</title>
+                                <sort_order>80</sort_order>
+                            </support>
+                        </children>
+                    </fidelitas>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>

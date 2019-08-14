@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Licentia_Fidelitas>
+            <active>true</active>
+            <codePool>community</codePool>
+            <version>2.0.0.3</version>
+        </Licentia_Fidelitas>
+    </modules>
+</config>

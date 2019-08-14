@@ -1,0 +1,128 @@
+<?php
+$data = $this->getCompany();
+?>
+<style type="text/css">
+    th span {
+        padding: 4px;
+    }
+
+    .grid td {
+        padding: 10px;
+    }
+</style>
+<div class="content-header">
+    <h3 class="icon-head head-customer"><?php echo $this->getTitle() ?></h3>
+</div>
+<div class="grid" style="width:40%; float:left;">
+    <table cellspacing="0" id="storeGrid_table" class="data">
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Account Data') ?></span></th>
+        </tr>
+        </thead>
+        <tbody id="">
+        <?php
+        $i = 0;
+        foreach ($data->getData() as $key => $info):
+
+            if ($key == 'credits' || $key == 'account_id' || $key == 'cron' || $key == 'notify_user') {
+                continue;
+            }
+            ?>
+            <tr class="<?php echo $i % 2 ? 'even' : '' ?>">
+                <td class="last"><?php echo ucwords(str_replace('_', ' ', $key)); ?></td>
+                <td class="last"><?php echo $info; ?></td>
+            </tr>
+            <?php $i++; ?>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+
+
+<div class="grid " style="width:23%; margin-left: 1%; float: right">
+
+
+    <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
+        <tbody>
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Extension Version') ?></span>
+            </th>
+        </tr>
+        </thead>
+        <tr>
+            <td><?php echo (string)Mage::getConfig()->getNode()->modules->Licentia_Fidelitas->version; ?></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
+        <tbody>
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Extension Manual') ?></span>
+            </th>
+        </tr>
+        </thead>
+        <tr>
+            <td style="background-color:#556B2F; color: white; "><?php echo $this->__('Click to download the extension manual [<a target="_blank" href="%s">EN</a>] / [<a target="_blank" href="%s">PT</a>]', 'http://licentia.pt/download/Fidelitas_Manual-EN.pdf', 'http://licentia.pt/download/Fidelitas_Manual-PT.pdf') ?></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
+        <tbody>
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Push Magento Subscribers') ?></span>
+            </th>
+        </tr>
+        </thead>
+        <tr class="even">
+            <td>
+                <a href="<?php echo $this->getUrl('*/*/bulk',array('export'=>1)); ?>"><?php echo $this->__('Click here to EXPORT Magento Subscribers.') ?> </a><br><em><?php echo $this->__('This process may take a few minutes') ?></em>
+            </td>
+        </tr>        <tr class="odd">
+            <td>
+                <a href="<?php echo $this->getUrl('*/*/bulk'); ?>"><?php echo $this->__('Click here to SYNC Magento Subscribers.') ?> </a><br><em><?php echo $this->__('This process may take a few minutes') ?></em>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
+        <tbody>
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Sync Data') ?></span></th>
+        </tr>
+        </thead>
+        <tr class="even">
+            <td>
+                <a href="<?php echo $this->getUrl('*/*/sync'); ?>"><?php echo $this->__('Click here to sync Mage/E-Goi data now.') ?> </a><br><em><?php echo $this->__('This process will run in background and may take a few minutes') ?></em>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
+        <tbody>
+        <thead>
+        <tr class="headings">
+            <th class=" no-link last" colspan="2"><span class="nobr"><?php echo $this->__('Clear Data') ?></span></th>
+        </tr>
+        </thead>
+        <tr class="even">
+            <td>
+                <a onclick="if(!confirm('Are you sure?')){return false;}"
+                   href="<?php echo $this->getUrl('*/*/clear'); ?>"><?php echo $this->__('Click here to clear all your data and disconnect from E-Goi') ?>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout>
+    <adminhtml_fidelitas_subscribers_grid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="fidelitas/adminhtml_subscribers_grid" name="admin.subscribers.grid"/>
+        </block>
+    </adminhtml_fidelitas_subscribers_grid>
+</layout>
