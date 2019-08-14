@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Licentia_Fidelitas>
-            <version>2.6.3.1</version>
+            <version>2.7.0.1</version>
         </Licentia_Fidelitas>
     </modules>
     <frontend>
@@ -14,10 +14,6 @@
                         <class>fidelitas/observer</class>
                         <method>addToAutoList</method>
                     </update_subscriber_auto>
-                    <fidelitas_update_autoresponders>
-                        <class>fidelitas/autoresponders</class>
-                        <method>newOrder</method>
-                    </fidelitas_update_autoresponders>
                 </observers>
             </sales_order_save_commit_after>
             <checkout_onepage_controller_success_action>
@@ -73,10 +69,6 @@
                         <class>fidelitas/autoresponders</class>
                         <method>changeStatus</method>
                     </fidelitas_autoresponders_status>
-                    <fidelitas_autoresponders_new_order>
-                        <class>fidelitas/autoresponders</class>
-                        <method>newOrder</method>
-                    </fidelitas_autoresponders_new_order>
                 </observers>
             </sales_order_save_commit_after>
             <sales_order_shipment_save_commit_after>
@@ -141,6 +133,14 @@
                     </fidelitas_update>
                 </observers>
             </newsletter_subscriber_save_after>
+            <sales_order_place_after>
+                <observers>
+                    <fidelitas_update_autoresponders>
+                        <class>fidelitas/autoresponders</class>
+                        <method>newOrder</method>
+                    </fidelitas_update_autoresponders>
+                </observers>
+            </sales_order_place_after>
         </events>
         <models>
             <core>
@@ -216,7 +216,7 @@
             </fidelitas_sync_manually>
             <fidelitas_sync_bulk>
                 <schedule>
-                    <cron_expr>15 3 * * 1</cron_expr>
+                    <cron_expr>15 3 * * *</cron_expr>
                 </schedule>
                 <run>
                     <model>fidelitas/egoi::addSubscriberBulk</model>
@@ -232,7 +232,7 @@
             </fidelitas_export_bulk>
             <fidelitas_sync>
                 <schedule>
-                    <cron_expr>0 3 * * 0</cron_expr>
+                    <cron_expr>0 3 * * *</cron_expr>
                 </schedule>
                 <run>
                     <model>fidelitas/egoi::sync</model>

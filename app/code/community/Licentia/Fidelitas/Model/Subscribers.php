@@ -181,76 +181,6 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             }
         }
 
-        $this->addData($data);
-
-
-        return parent::save();
-
-        $this->load($this->getEmail(), 'email');
-
-        if (!$this->getOrigData() && $this->getId()) {
-            $this->load($this->getId());
-        }
-
-        $list = Mage::getModel('fidelitas/lists')->getList()->getData('listnum');;
-
-        $data['listID'] = $list;
-        $data['list'] = $list;
-        $data['listnum'] = $list;
-
-        /** @var Mage_Customer_Model_Customer $customer */
-        $customer = $this->findCustomer($data['email'], 'email');
-
-        $extra = Mage::getModel('fidelitas/extra')->getExtra();
-
-        if ($customer) {
-            $data['customer_id'] = $customer->getId();
-            $data['birth_date'] = $customer->getData('dob');
-            $data['first_name'] = $customer->getData('firstname');
-            $data['last_name'] = $customer->getData('lastname');
-
-            if ($customer->getData('cellphone')) {
-                $data['cellphone'] = $customer->getData('cellphone');
-            }
-
-            foreach ($extra as $element) {
-
-                if ($this->getData($element->getData('attribute_code'))) {
-                    $data[$element->getData('extra_code')] = $this->getData($element->getData('attribute_code'));
-                    continue;
-                }
-
-                if ($customer->getData($element->getData('attribute_code'))) {
-                    $data[$element->getData('extra_code')] = $customer->getData($element->getData('attribute_code'));
-                    continue;
-                }
-
-                $billing = false;
-                if (stripos($element->getData('attribute_code'), 'addr_') !== false) {
-                    $attributeCode = substr($element->getData('attribute_code'), 5);
-                    $billing = true;
-                } else {
-                    $attributeCode = $element->getData('attribute_code');
-                }
-
-                if ($billing) {
-                    $customer = $this->findCustomer($customer->getId(), 'entity_id', $attributeCode);
-                } else {
-                    $customer = Mage::getModel('customer/customer')->load($customer->getId());
-                }
-
-                if ($customer->getData($attributeCode)) {
-                    $data[$element->getData('extra_code')] = $customer->getData($attributeCode);
-                }
-            }
-        }
-
-        if (!$data['first_name'] && !$this->getOrigData('first_name')) {
-            $data['first_name'] = 'Customer';
-        }
-
-        $this->addData($data);
-
         $info = $this->subscriberExists('email', $this->getEmail());
 
         if ($info && isset($data['inCallback'])) {
@@ -271,6 +201,8 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             $this->setId($info->getId());
         }
 
+        $data['listID'] = $data['list'];
+
         $model->addData($data);
         $this->addData($data);
 
@@ -288,8 +220,12 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
             } else {
                 $result = $model->setData('status', 1)->addSubscriber();
+
                 if (isset($result['uid'])) {
                     $this->setData('uid', $result->getData('uid'));
+                    if (!Mage::app()->getStore()->isAdmin()) {
+                        Mage::getSingleton('core/cookie')->set('egoi-subscriber', $result['uid'], true);
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -298,6 +234,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         return parent::save();
     }
+
 
     public function delete()
     {
@@ -342,7 +279,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             $data['status'] = $subscriber->getSubscriberStatus() == 3 ? 0 : 1;
             $data['store_id'] = $subscriber->getStoreId();
 
-            $this->addData($data)->save();
+            return $this->addData($data)->save();
 
         } catch (Exception $e) {
             Mage::logException($e);

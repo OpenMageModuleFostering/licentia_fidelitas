@@ -1,7 +1,5 @@
 <?php
 
-define('RestUrl', 'http://api.e-goi.com/');
-define('RestPath', '/v2/rest.php');
 
 class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 {
@@ -20,7 +18,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
         ini_set('default_socket_timeout', 10);
 
-        $this->rpc = new Zend_Rest_Client(RestUrl);
+        $this->rpc = new Zend_XmlRpc_Client('http://api.e-goi.com/v2/xmlrpc.php');
 
         $this->_client = new Zend_Soap_Client(self::API_URL, array("user_agent" => "Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/20120403211507 Firefox/12.0"));
     }
@@ -226,6 +224,12 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
             ->addFieldToFilter('subscriber_status', 1)
             ->addFieldToFilter('subscriber_id', array('gt' => $lastSync));
 
+        $yesterday = date('Y-m-d 00:00:00', strtotime('yesterday'));
+
+        if (!$generate) {
+            $meta->addFieldToFilter('fidelitas_updated_at', array('gteq' => $yesterday));
+        }
+
         if ($meta->getSize() == 0) {
             return true;
         }
@@ -245,6 +249,10 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     ->setPageSize($processNumber)
                     ->addFieldToFilter('subscriber_status', 1)
                     ->addFieldToFilter('subscriber_id', array('gt' => $lastSync));
+
+                if (!$generate) {
+                    $meta->addFieldToFilter('fidelitas_updated_at', array('gteq' => $yesterday));
+                }
 
                 $subscribers = array();
                 $indexArray = array();
@@ -433,7 +441,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         'subscribers'   => $subscribers,
                     );
 
-                    $this->call('addSubscriberBulk', $params);
+                    $client = new Zend_XmlRpc_Client('http://api.e-goi.com/v2/xmlrpc.php');
+                    $result = $client->call('addSubscriberBulk', array($params));
 
                     if (count($subscribers) == 200) {
                         $cron = Mage::getModel('cron/schedule');
@@ -665,46 +674,5 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
         ];
     }
 
-    function call($method, $map)
-    {
-
-        $params = $this->buildParams($method, $map);
-        $resp = $this->rpc->restGet(RestPath, $params);
-        $map = Zend_Json::decode($resp->getBody(), Zend_Json::TYPE_ARRAY);
-        $map = $map["Egoi_Api"][$method];
-        unset($map['status']);
-
-        return $this->walkMap($map);
-    }
-
-    function walkMap($map)
-    {
-
-        if (array_key_exists("key_0", $map)) {
-            $mrl = [];
-            foreach ($map as $k => $v) {
-                if (strpos($k, "key_") != 0) {
-                    continue;
-                }
-                $mrl[] = $this->walkValues($v);
-            }
-
-            return $mrl;
-        } else {
-            return $this->walkValues($map);
-        }
-    }
-
-    function walkValues($map)
-    {
-
-        foreach ($map as $k => $v) {
-            if (is_array($v)) {
-                $map[$k] = $this->walkMap($v);
-            }
-        }
-
-        return $map;
-    }
 
 }

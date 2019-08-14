@@ -215,7 +215,7 @@ class Licentia_Fidelitas_Model_Autoresponders extends Mage_Core_Model_Abstract
 
         $storeIds = explode(',', $autoresponder->getStoreIds());
 
-        if (!in_array($storeId, $storeIds)) {
+        if (!in_array($storeId, $storeIds) && !in_array(0,$storeIds)) {
             return false;
         }
 

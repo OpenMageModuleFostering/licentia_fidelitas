@@ -20,15 +20,14 @@ if ($account->getClienteId()) {
         $installPath .= "/";
         $secureinstallPath .= "/";
     }
-    $_customerId = Mage::getSingleton('customer/session')->getCustomer()->getId();
+
     $listId = '';
     $subscriberId = '';
-    if ($_customerId) {
-        $sub = Mage::helper('fidelitas')->isCustomerSubscribed($_customerId);
-        if ($sub) {
-            $listId = $sub->getList();
-            $subscriberId = $sub->getUid();
-        }
+
+    $sub = Mage::helper('fidelitas')->loadSubscriber();
+    if ($sub) {
+        $listId = $sub->getList();
+        $subscriberId = $sub->getUid();
     }
 
 //0 Search Results

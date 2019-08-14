@@ -22,13 +22,35 @@ class Licentia_Fidelitas_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
 
-    public function isCustomerSubscribed($customerId)
+    public function loadSubscriber()
     {
-        $col = Mage::getModel('fidelitas/subscribers')
-            ->getCollection()
-            ->addFieldToFilter('customer_id', $customerId);
+        $customerId = Mage::getSingleton('customer/session')->getCustomer()->getId();
 
-        return $col->getSize() > 0 ? $col->getFirstItem() : false;
+        if ($customerId) {
+            $uid = Mage::getModel('fidelitas/subscribers')
+                ->getCollection()
+                ->addFieldToFilter('customer_id', $customerId)
+                ->getFirstItem();
+
+            if ($uid->getData('uid')) {
+                Mage::getSingleton('core/cookie')->set('egoi-subscriber', $uid->getData('uid'), true);
+                return $uid;
+            }
+        }
+
+        $uid = Mage::getSingleton('core/cookie')->get('egoi-subscriber');
+        if ($uid) {
+            $uid = Mage::getModel('fidelitas/subscribers')
+                ->getCollection()
+                ->addFieldToFilter('uid', $uid)
+                ->getFirstItem();
+
+            if ($uid->getData('uid')) {
+                return $uid;
+            }
+        }
+
+        return false;
     }
 
     public function getSmtpTransport($storeId)
