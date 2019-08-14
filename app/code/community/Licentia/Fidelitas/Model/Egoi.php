@@ -202,7 +202,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
     public function addSubscriberBulk($generate = false)
     {
-        $meta = Mage::getModel('newsletter/subscriber')->getCollection();
+        $meta = Mage::getModel('newsletter/subscriber')->getCollection()
+            ->addFieldToFilter('subscriber_status', 1);
 
         $list = Mage::getModel('fidelitas/lists')->getList(true);
         $extra = Mage::getModel('fidelitas/extra')->getExtra();
@@ -324,6 +325,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                             }
                         }
 
+                        $data['status'] = 1;
+                        /*
                         $data['status'] = $subscriber->getStatus();
                         $indexArray[] = 'status';
                         if ($subscriber->getStatus() == 4) {
@@ -335,6 +338,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         if ($subscriber->getStatus() == 2) {
                             $data['status'] = 4;
                         }
+                        */
 
                         if ($subI == 1) {
                             $subscribers[] = $indexArray;
@@ -345,7 +349,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     }
                 }
 
-                if ($generate === false) {
+                if ($generate === true) {
                     return $subscribers;
                 }
 
