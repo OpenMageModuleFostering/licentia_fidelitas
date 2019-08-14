@@ -10,6 +10,42 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
         return $this;
     }
 
+    public function refreshAction()
+    {
+
+
+        $core = Mage::getModel('newsletter/subscriber')
+            ->getCollection()
+            ->addFieldToFilter('subscriber_status', 1);
+
+        /** @var Mage_Newsletter_Model_Subscriber $susbcriber */
+        foreach ($core as $susbcriber) {
+
+            /** @var Mage_Customer_Model_Customer $customer */
+            $customer = Mage::getModel('customer/customer')->load($susbcriber->getCustomerId());
+            $egoi = Mage::getModel('fidelitas/subscribers')->load($susbcriber->getEmail(), 'email');
+
+            if ($customer->getId()) {
+                $data['email'] = $customer->getEmail();
+                $data['customer_id'] = $customer->getId();
+                $data['birth_date'] = $customer->getData('dob');
+                $data['first_name'] = $customer->getData('firstname');
+                $data['last_name'] = $customer->getData('lastname');
+
+                if ($customer->getData('cellphone')) {
+                    $data['cellphone'] = $customer->getData('cellphone');
+                }
+            }
+
+            $egoi->addData($data)->save();
+
+        }
+
+        $this->_getSession()->addSuccess('Success.');
+
+        return $this->_redirectReferer();
+    }
+
     public function validateSmtpAction()
     {
         try {

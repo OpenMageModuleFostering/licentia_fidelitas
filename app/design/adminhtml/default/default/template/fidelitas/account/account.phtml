@@ -63,7 +63,7 @@ $currentList = Mage::getModel('fidelitas/lists')->getList();
 
 
     <form method="post" action="<?php echo $this->getUrl('*/*/list') ?>">
-        <?php echo $this->getBlockHtml('formkey')?>
+        <?php echo $this->getBlockHtml('formkey') ?>
         <table cellspacing="0" style="margin-top:10px;" id="storeGrid_table" class="data">
             <tbody>
             <thead>
@@ -121,6 +121,11 @@ $currentList = Mage::getModel('fidelitas/lists')->getList();
             </th>
         </tr>
         </thead>
+        <tr class="odd">
+            <td>
+                <a href="<?php echo $this->getUrl('*/*/refresh'); ?>"><?php echo $this->__('Sync Newsletter/Customer Information') ?> </a><br><em><?php echo $this->__('This process may take a few minutes') ?></em>
+            </td>
+        </tr>
         <tr class="even">
             <td>
                 <a href="<?php echo $this->getUrl('*/*/bulk', array('export' => 1)); ?>"><?php echo $this->__('Click here to EXPORT Magento Subscribers.') ?> </a><br><em><?php echo $this->__('This process may take a few minutes') ?></em>
