@@ -79,7 +79,7 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
 
     public function updateCallback($id = null)
     {
-
+        return;
         if ($id) {
             $list = $this->load($id);
         } else {

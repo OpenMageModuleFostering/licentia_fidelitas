@@ -66,13 +66,27 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
     {
 
         if ($this->getRequest()->getParam('export')) {
+
+            unlink(Mage::getBaseDir('tmp') . '/egoi_export.csv');
+
+            $cron = Mage::getModel('cron/schedule');
+            $data['status'] = 'pending';
+            $data['job_code'] = 'fidelitas_export_bulk';
+            $data['scheduled_at'] = now();
+            $data['created_at'] = now();
+            $cron->setData($data)->save();
+
+
             $file = Mage::getBaseDir('tmp') . '/egoi.txt';
             file_put_contents($file, '0');
 
-            Mage::getModel('fidelitas/egoi')->addSubscriberBulk(true);
-            $file = Mage::getBaseDir('tmp') . '/egoi_export.csv';
+            #Mage::getModel('fidelitas/egoi')->addSubscriberBulk(true);
+            #$file = Mage::getBaseDir('tmp') . '/egoi_export.csv';
+            #return $this->_prepareDownloadResponse('egoi_export.csv', file_get_contents($file));
 
-            return $this->_prepareDownloadResponse('egoi_export.csv', file_get_contents($file));
+
+            $this->_getSession()->addSuccess('You will get an email when the file is reafy to download');
+            return $this->_redirect('*/fidelitas_account/index/');
         }
 
         $cron = Mage::getModel('cron/schedule');

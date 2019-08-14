@@ -1,5 +1,8 @@
 <?php
 
+define('RestUrl', 'http://api.e-goi.com/');
+define('RestPath', '/v2/rest.php');
+
 class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 {
 
@@ -16,6 +19,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
         ini_set('default_socket_timeout', 10);
 
+        $this->rpc = new Zend_Rest_Client(RestUrl);
 
         $this->_client = new Zend_Soap_Client(self::API_URL, array("user_agent" => "Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/20120403211507 Firefox/12.0"));
     }
@@ -203,12 +207,13 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
     }
 
 
+    public function exportBulk()
+    {
+        return $this->addSubscriberBulk(true);
+    }
+
     public function addSubscriberBulk($generate = false)
     {
-
-        if ($generate === true) {
-            unlink(Mage::getBaseDir('tmp') . '/egoi_export.csv');
-        }
 
         $file = Mage::getBaseDir('tmp') . '/egoi.txt';
         if (!is_file($file)) {
@@ -218,7 +223,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
         $meta = Mage::getModel('newsletter/subscriber')->getCollection()
             ->addFieldToFilter('subscriber_status', 1)
-            ->addFieldToFilter('subscriber_id', array('gteq' => $lastSync));
+            ->addFieldToFilter('subscriber_id', array('gt' => $lastSync));
 
         if ($meta->getSize() == 0) {
             return true;
@@ -238,7 +243,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     ->getCollection()
                     ->setPageSize($processNumber)
                     ->addFieldToFilter('subscriber_status', 1)
-                    ->addFieldToFilter('subscriber_id', array('gteq' => $lastSync));
+                    ->addFieldToFilter('subscriber_id', array('gt' => $lastSync));
 
                 $subscribers = array();
                 $indexArray = array();
@@ -330,7 +335,13 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     }
                 }
 
+
                 if ($generate === true) {
+
+                    if ($lastSync > 0) {
+                        unset($subscribers[0]);
+                    }
+
                     $fileExport = Mage::getBaseDir('tmp') . '/egoi_export.csv';
                     $fp = fopen($fileExport, 'a');
 
@@ -339,7 +350,45 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     }
 
                     fclose($fp);
+
+                    if (count($subscribers) == 200) {
+
+                        $cron = Mage::getModel('cron/schedule');
+                        $data['status'] = 'pending';
+                        $data['job_code'] = 'fidelitas_export_bulk';
+                        $data['scheduled_at'] = now();
+                        $data['created_at'] = now();
+                        $cron->setData($data)->save();
+
+                    } else {
+
+                        $token = md5(time());
+
+                        $msg = 'Hi ' . Mage::getStoreConfig('trans_email/ident_sales/name') . ', ';
+
+                        $msg .= "The exported Newsletter subscribers file is ready. 
+                        <br><br>You can download it form the following link<br><br>";
+
+                        $msg .= Mage::getUrl('egoi/download/index', ['token' => $token]);
+
+                        $msg .= "<br><br>Regards<br><br>";
+
+                        $mail = new Zend_Mail('UTF-8');
+                        $mail->setBodyHtml($msg);
+                        $mail->setFrom(Mage::getStoreConfig('trans_email/ident_sales/email'),
+                            Mage::getStoreConfig('trans_email/ident_sales/name'))
+                            ->addTo(Mage::getStoreConfig('trans_email/ident_sales/email'),
+                                Mage::getStoreConfig('trans_email/ident_sales/name'))
+                            ->setSubject('E-Goi - Export Finished');
+                        $mail->send();
+
+                        file_put_contents(Mage::getBaseDir('tmp') . '/egoi_token.txt', $token);
+
+                    }
+
                 } else {
+
+                    unset($subscribers[0]);
 
                     $params = array(
                         'apikey'        => Mage::getStoreConfig('fidelitas/config/api_key'),
@@ -352,7 +401,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         'subscribers'   => $subscribers,
                     );
 
-                    $this->processServiceResult($this->_client->addSubscriberBulk($params));
+                    $this->call('addSubscriberBulk', $params);
 
                     if (count($subscribers) == 200) {
                         $cron = Mage::getModel('cron/schedule');
@@ -572,6 +621,58 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
             $account->setData('cron', 0)->save();
             Mage::getModel('fidelitas/egoi')->sync();
         }
+    }
+
+    function buildParams($method, $arguments)
+    {
+
+        return [
+            "method"          => $method,
+            "functionOptions" => $arguments,
+            "type"            => "json",
+        ];
+    }
+
+    function call($method, $map)
+    {
+
+        $params = $this->buildParams($method, $map);
+        $resp = $this->rpc->restGet(RestPath, $params);
+        $map = Zend_Json::decode($resp->getBody(), Zend_Json::TYPE_ARRAY);
+        $map = $map["Egoi_Api"][$method];
+        unset($map['status']);
+
+        return $this->walkMap($map);
+    }
+
+    function walkMap($map)
+    {
+
+        if (array_key_exists("key_0", $map)) {
+            $mrl = [];
+            foreach ($map as $k => $v) {
+                if (strpos($k, "key_") != 0) {
+                    continue;
+                }
+                $mrl[] = $this->walkValues($v);
+            }
+
+            return $mrl;
+        } else {
+            return $this->walkValues($map);
+        }
+    }
+
+    function walkValues($map)
+    {
+
+        foreach ($map as $k => $v) {
+            if (is_array($v)) {
+                $map[$k] = $this->walkMap($v);
+            }
+        }
+
+        return $map;
     }
 
 }
