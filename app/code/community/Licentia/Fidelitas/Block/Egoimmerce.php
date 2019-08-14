@@ -19,26 +19,25 @@ class Licentia_Fidelitas_Block_Egoimmerce extends Mage_Core_Block_Template
             ->addFieldToFilter('entity_id', array('in' => $orderIds));
         $result = array();
 
+        /** @var Mage_Sales_Model_Order $order */
         foreach ($collection as $order) {
+
+            /** @var Mage_Sales_Model_Order_Item $item */
             foreach ($order->getAllVisibleItems() as $item) {
 
                 //get category name
-                $product_id = $item->product_id;
+                $product_id = $item->getProductId();
                 $_product = Mage::getModel('catalog/product')->load($product_id);
                 $cats = $_product->getCategoryIds();
-                $category_id = $cats[0]; // just grab the first id
+                $category_id = end($cats);
                 $category = Mage::getModel('catalog/category')->load($category_id);
                 $category_name = $category->getName();
 
+                $qty = number_format((int)$item->getQtyOrdered(), 0, '.', '');
 
-                if ($item->getQtyOrdered()) {
-                    $qty = number_format($item->getQtyOrdered(), 0, '.', '');
-                } else {
-                    $qty = '0';
-                }
-                $result[] = sprintf("_egoiaq.push(['addEcommerceItem',  '%s', '%s', '%s', %s, %s]);", $this->jsQuoteEscape($item->getSku()), $this->jsQuoteEscape($item->getName()), $category_name, $item->getBasePrice(), $qty
-                );
+                $result[] = sprintf("_egoiaq.push(['addEcommerceItem',  '%s', '%s', '%s', %s, %s]);", $this->jsQuoteEscape($item->getSku()), $this->jsQuoteEscape($item->getName()), $category_name, $item->getBasePrice(), $qty);
             }
+
             foreach ($collection as $order) {
                 if ($order->getGrandTotal()) {
                     $subtotal = $order->getGrandTotal() - $order->getShippingAmount() - $order->getShippingTaxAmount();
@@ -60,13 +59,10 @@ class Licentia_Fidelitas_Block_Egoimmerce extends Mage_Core_Block_Template
         foreach ($cart as $cartitem) {
 
             //get category name
-            $product_id = $cartitem->product_id;
+            $product_id = $cartitem->getProductId();
             $_product = Mage::getModel('catalog/product')->load($product_id);
             $cats = $_product->getCategoryIds();
-            if (isset($cats)) {
-                $category_id = $cats[0];
-            } // just grab the first id
-            $category = Mage::getModel('catalog/category')->load($category_id);
+            $category = Mage::getModel('catalog/category')->load(end($cats));
             $category_name = $category->getName();
             $nameofproduct = str_replace('"', "", $cartitem->getName());
 
@@ -74,7 +70,7 @@ class Licentia_Fidelitas_Block_Egoimmerce extends Mage_Core_Block_Template
                 continue;
             }
 
-            echo '_egoiaq.push(["addEcommerceItem", "' . $cartitem->getSku() . '","' . $nameofproduct . '","' . $category_name . '",' . $cartitem->getPrice() . ',' . $cartitem->getQty() . ']);';
+            echo '_egoiaq.push(["addEcommerceItem", "' . $cartitem->getSku() . '","' . $nameofproduct . '","' . $category_name . '",' . $cartitem->getPrice() . ',' . (int)$cartitem->getQty() . ']);';
             echo "\n";
         }
 
@@ -97,17 +93,13 @@ class Licentia_Fidelitas_Block_Egoimmerce extends Mage_Core_Block_Template
             return;
         }
 
-        $product_id = $currentproduct->getId();
-        $_product = Mage::getModel('catalog/product')->load($product_id);
-        $cats = $_product->getCategoryIds();
-        $category_id = $cats[0]; // just grab the first id
-        //$category_id = if (isset($cats[0]) {$category_id = $cats[0]} else $category_id = null; potential fix when no catgeories
-        $category = Mage::getModel('catalog/category')->load($category_id);
-        $category_name = $category->getName();
+        $cats = $currentproduct->getCategoryIds();
+        $category = Mage::getModel('catalog/category')->load(end($cats));
+        $categoryName = $category->getName();
         $product = str_replace('"', "", $currentproduct->getName());
 
 
-        echo '_egoiaq.push(["setEcommerceView", "' . $currentproduct->getSku() . '", "' . $product . '","' . $category_name . '",' . $currentproduct->getPrice() . ']);';
+        echo '_egoiaq.push(["setEcommerceView", "' . $currentproduct->getSku() . '", "' . $product . '","' . $categoryName . '",' . $currentproduct->getPrice() . ']);';
         Mage::unregister('current_category');
     }
 

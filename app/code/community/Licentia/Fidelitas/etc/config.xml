@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Licentia_Fidelitas>
-            <version>2.6.0.0</version>
+            <version>2.6.1.7</version>
         </Licentia_Fidelitas>
     </modules>
     <frontend>
@@ -143,6 +143,12 @@
             </newsletter_subscriber_save_after>
         </events>
         <models>
+            <core>
+                <rewrite>
+                    <email>Licentia_Fidelitas_Model_Email</email>
+                    <email_template>Licentia_Fidelitas_Model_Email_Template</email_template>
+                </rewrite>
+            </core>
             <fidelitas>
                 <class>Licentia_Fidelitas_Model</class>
                 <resourceModel>fidelitas_mysql4</resourceModel>
@@ -240,6 +246,9 @@
                 <api_key>0</api_key>
                 <cellphone>telephone</cellphone>
             </config>
+            <transactional>
+                <enabled>0</enabled>
+            </transactional>
         </fidelitas>
     </default>
 </config>

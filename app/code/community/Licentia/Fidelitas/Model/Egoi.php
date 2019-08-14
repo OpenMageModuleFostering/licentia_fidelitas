@@ -11,6 +11,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
 
     protected $_client;
+    protected $rpc;
 
 
     public function _construct()
@@ -315,6 +316,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
                                     $indexArray[] = $element->getData('extra_code');
                                 }
+                                $data[$element->getData('extra_code')] = '';
                             }
                         } else {
                             foreach ($extra as $element) {
@@ -356,8 +358,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         $cron = Mage::getModel('cron/schedule');
                         $data['status'] = 'pending';
                         $data['job_code'] = 'fidelitas_export_bulk';
-                        $data['scheduled_at'] = now();
-                        $data['created_at'] = now();
+                        $data['scheduled_at'] = Mage::getSingleton('core/date')->gmtDate();
+                        $data['created_at'] = Mage::getSingleton('core/date')->gmtDate();
                         $cron->setData($data)->save();
 
                     } else {
@@ -407,8 +409,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         $cron = Mage::getModel('cron/schedule');
                         $data['status'] = 'pending';
                         $data['job_code'] = 'fidelitas_sync_bulk';
-                        $data['scheduled_at'] = now();
-                        $data['created_at'] = now();
+                        $data['scheduled_at'] = Mage::getSingleton('core/date')->gmtDate();
+                        $data['created_at'] = Mage::getSingleton('core/date')->gmtDate();
                         $cron->setData($data)->save();
                     }
                 }

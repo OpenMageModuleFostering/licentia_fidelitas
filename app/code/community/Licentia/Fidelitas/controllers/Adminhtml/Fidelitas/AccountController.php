@@ -10,6 +10,32 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
         return $this;
     }
 
+    public function validateSmtpAction()
+    {
+        try {
+
+            $transport = Mage::helper('fidelitas')->getSmtpTransport();
+
+            $salesSender = Mage::getStoreConfig('trans_email/ident_general/name');
+            $salesEmail = Mage::getStoreConfig('trans_email/ident_general/email');
+
+            $mail = new Zend_Mail('utf-8');
+            $mail->setBodyHtml('If you are receiving this message, everything seems to be ok with your SMTP configuration');
+            $mail->setFrom($salesEmail, $salesSender)
+                ->addTo($salesEmail, $salesSender)
+                ->setSubject('E-Goi / Magento - Test');
+
+            $mail->send($transport);
+
+            $this->_getSession()->addSuccess('Success. Everything seems to be ok with your setting. We sent an email to ' . $salesEmail);
+
+        } catch (Exception $e) {
+            $this->_getSession()->addError('Error Testing your Settings: ' . $e->getMessage());
+        }
+
+        return $this->_redirectReferer();
+    }
+
     public function listAction()
     {
         try {
@@ -17,6 +43,11 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
             Mage::getModel('fidelitas/lists')->getList()->setData('listnum', $listnum)->save();
             Mage::getModel('fidelitas/extra')->getCollection()->walk('delete');
             Mage::getModel('fidelitas/lists')->getList(true);
+
+            /** @var Mage_Core_Model_Resource $resource */
+            $resource = Mage::getSingleton('core/resource');
+            $write = $resource->getConnection('core_write');
+            $write->update($resource->getTableName('fidelitas_subscribers'), array('list' => $listnum));
 
             $this->_getSession()->addSuccess($this->__('List Updated. Please map the attributes to the new list'));
 
@@ -33,7 +64,11 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
     {
 
         try {
-            $cron = Mage::getModel('cron/schedule')->getCollection()->setOrder('finished_at', 'DESC')->setPageSize(1)->getFirstItem();
+            $cron = Mage::getModel('cron/schedule')
+                ->getCollection()->setOrder('finished_at', 'DESC')
+                ->setPageSize(1)
+                ->getFirstItem();
+
             $firstDay = new Zend_Date($cron['finished_at']);
             $lastDay = new Zend_Date(now());
             $diff = $lastDay->sub($firstDay)->toValue('m');
@@ -50,7 +85,7 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
 
             $okList = Mage::getModel('fidelitas/lists')->getList(true, true);
 
-            if ($okList == -1) {
+            if (is_integer($okList) && $okList == -1) {
                 $this->_getSession()->addError($this->__('WARNING: We cannot find your E-Goi List Mapped to this Store. If this errors continues, please use the section on your right "Clear Data" to disconnect and start the mapping process again'));
             }
         } catch (Exception $e) {
@@ -72,10 +107,9 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
             $cron = Mage::getModel('cron/schedule');
             $data['status'] = 'pending';
             $data['job_code'] = 'fidelitas_export_bulk';
-            $data['scheduled_at'] = now();
-            $data['created_at'] = now();
+            $data['scheduled_at'] = Mage::getSingleton('core/date')->gmtDate();
+            $data['created_at'] = Mage::getSingleton('core/date')->gmtDate();
             $cron->setData($data)->save();
-
 
             $file = Mage::getBaseDir('tmp') . '/egoi.txt';
             file_put_contents($file, '0');
@@ -92,8 +126,8 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
         $cron = Mage::getModel('cron/schedule');
         $data['status'] = 'pending';
         $data['job_code'] = 'fidelitas_sync_bulk';
-        $data['scheduled_at'] = now();
-        $data['created_at'] = now();
+        $data['scheduled_at'] = Mage::getSingleton('core/date')->gmtDate();
+        $data['created_at'] = Mage::getSingleton('core/date')->gmtDate();
         $cron->setData($data)->save();
         $this->_getSession()->addSuccess($this->__('Data will be synced next time cron runs'));
 
@@ -166,7 +200,7 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
             $email = 'integrations@e-goi.com';
 
             $msg = '';
-            $params['date'] = now();
+            $params['date'] = Mage::getSingleton('core/date')->gmtDate();
 
             foreach ($params as $key => $value) {
                 $msg .= "$key : $value <br>";
@@ -279,8 +313,8 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
             $cron = Mage::getModel('cron/schedule');
             $data['status'] = 'pending';
             $data['job_code'] = 'fidelitas_sync_manually';
-            $data['scheduled_at'] = now();
-            $data['created_at'] = now();
+            $data['scheduled_at'] = Mage::getSingleton('core/date')->gmtDate();
+            $data['created_at'] = Mage::getSingleton('core/date')->gmtDate();
             $cron->setData($data)->save();
             $this->_getSession()->addSuccess($this->__('Data will be synced next time cron runs'));
         }
