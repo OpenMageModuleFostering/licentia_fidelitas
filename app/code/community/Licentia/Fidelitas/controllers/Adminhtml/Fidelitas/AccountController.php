@@ -10,27 +10,51 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
         return $this;
     }
 
+    public function listAction()
+    {
+        try {
+            $listnum = $this->getRequest()->getPost('list_id');
+            Mage::getModel('fidelitas/lists')->getList()->setData('listnum', $listnum)->save();
+            Mage::getModel('fidelitas/extra')->getCollection()->walk('delete');
+            Mage::getModel('fidelitas/lists')->getList(true);
+
+            $this->_getSession()->addSuccess($this->__('List Updated. Please map the attributes to the new list'));
+
+        } catch (Exception $e) {
+
+            $this->_getSession()->addError($e->getMessage());
+        }
+
+        $this->_redirect('*/fidelitas_lists/');
+        return;
+    }
+
     public function indexAction()
     {
-        $cron = Mage::getModel('cron/schedule')->getCollection()->setOrder('finished_at', 'DESC')->setPageSize(1)->getFirstItem();
-        $firstDay = new Zend_Date($cron['finished_at']);
-        $lastDay = new Zend_Date(now());
-        $diff = $lastDay->sub($firstDay)->toValue('m');
 
-        if ($diff > 20 || !$cron->getId()) {
-            $this->_getSession()->addError($this->__('WARNING: Your cron is not running. Background data sync will not occur.'));
-        }
+        try {
+            $cron = Mage::getModel('cron/schedule')->getCollection()->setOrder('finished_at', 'DESC')->setPageSize(1)->getFirstItem();
+            $firstDay = new Zend_Date($cron['finished_at']);
+            $lastDay = new Zend_Date(now());
+            $diff = $lastDay->sub($firstDay)->toValue('m');
 
-        $auth = Mage::getModel('fidelitas/egoi')->validateEgoiEnvironment();
-        if (!$auth) {
-            $this->_redirect('adminhtml/fidelitas_account/new');
-            return;
-        }
+            if ($diff > 20 || !$cron->getId()) {
+                $this->_getSession()->addError($this->__('WARNING: Your cron is not running. Background data sync will not occur.'));
+            }
 
-        $okList = Mage::getModel('fidelitas/lists')->getList(true);
+            $auth = Mage::getModel('fidelitas/egoi')->validateEgoiEnvironment();
+            if (!$auth) {
+                $this->_redirect('adminhtml/fidelitas_account/new');
+                return;
+            }
 
-        if ($okList == -1) {
-            $this->_getSession()->addError($this->__('WARNING: We cannot find your E-Goi List Mapped to this Store. If this errors continues, please use the section on your right "Clear Data" to disconnect and start the mapping process again'));
+            $okList = Mage::getModel('fidelitas/lists')->getList(true, true);
+
+            if ($okList == -1) {
+                $this->_getSession()->addError($this->__('WARNING: We cannot find your E-Goi List Mapped to this Store. If this errors continues, please use the section on your right "Clear Data" to disconnect and start the mapping process again'));
+            }
+        } catch (Exception $e) {
+
         }
 
         $this->_initAction();
@@ -42,19 +66,13 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
     {
 
         if ($this->getRequest()->getParam('export')) {
+            $file = Mage::getBaseDir('tmp') . '/egoi.txt';
+            file_put_contents($file, '0');
 
-            $subscribers = Mage::getModel('fidelitas/egoi')->addSubscriberBulk(true);
+            Mage::getModel('fidelitas/egoi')->addSubscriberBulk(true);
             $file = Mage::getBaseDir('tmp') . '/egoi_export.csv';
-            $fp = fopen($file, 'w');
-
-            foreach ($subscribers as $fields) {
-                fputcsv($fp, $fields, ';');
-            }
-
-            fclose($fp);
 
             return $this->_prepareDownloadResponse('egoi_export.csv', file_get_contents($file));
-
         }
 
         $cron = Mage::getModel('cron/schedule');
@@ -78,17 +96,17 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
 
         $data = array('lists', 'autoresponders', 'events', 'subscribers', 'extra');
 
+        $resource = Mage::getSingleton('core/resource');
+        $write = $resource->getConnection('core_write');
+
         foreach ($data as $delete) {
             try {
                 $model = Mage::getModel('fidelitas/' . $delete);
                 if (!$model) {
                     continue;
                 }
+                $write->truncateTable($model->getResource()->getMainTable());
 
-                $collection = $model->getCollection();
-                foreach ($collection as $item) {
-                    $item->delete();
-                }
             } catch (Exception $e) {
 
             }
@@ -261,21 +279,24 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
     {
         if ($this->getRequest()->isPost()) {
             $data = $this->getRequest()->getPost();
+            try {
+                $model = Mage::getModel('fidelitas/egoi')->setData('api_key', $data['api_key'])->checkLogin($data['api_key']);
+                if ($model->getData('user_id')) {
+                    Mage::getConfig()->saveConfig('fidelitas/config/api_key', $data['api_key']);
+                    Mage::getConfig()->cleanCache();
 
-            $model = Mage::getModel('fidelitas/egoi')->setData('api_key', $data['api_key'])->checkLogin($data['api_key']);
-            if ($model->getData('user_id')) {
-                Mage::getConfig()->saveConfig('fidelitas/config/api_key', $data['api_key']);
-                Mage::getConfig()->cleanCache();
-
-                $lists = Mage::getModel('fidelitas/egoi')->getLists();
-                if (count($lists->getData()) == 0) {
-                    $this->_getSession()->addSuccess($this->__('Success!!! Please wait while we setup the environment. Don\'t close or refresh this page.'));
-                } else {
-                    $this->_getSession()->addSuccess($this->__('Success!!!'));
+                    $lists = Mage::getModel('fidelitas/egoi')->getLists();
+                    if (count($lists->getData()) == 0) {
+                        $this->_getSession()->addSuccess($this->__('Success!!! Please wait while we setup the environment. Don\'t close or refresh this page.'));
+                    } else {
+                        $this->_getSession()->addSuccess($this->__('Success!!!'));
+                    }
+                    $this->_redirect('*/*/first/op/ok');
+                    return;
                 }
-                $this->_redirect('*/*/first/op/ok');
-                return;
-            } else {
+
+            } catch (Exception $e) {
+
                 $this->_getSession()->addError($this->__('Apikey invalid'));
                 $this->_redirect('*/*/new/op/api');
                 return;

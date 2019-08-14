@@ -14,7 +14,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
     {
         parent::_construct();
 
-        ini_set('default_socket_timeout', 120);
+        ini_set('default_socket_timeout', 10);
+
 
         $this->_client = new Zend_Soap_Client(self::API_URL, array("user_agent" => "Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/20120403211507 Firefox/12.0"));
     }
@@ -86,6 +87,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
     public function getPhone($document)
     {
+
 
         if (!is_object($document) && stripos($document, '-') === false) {
             return false;
@@ -203,18 +205,29 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
     public function addSubscriberBulk($generate = false)
     {
+
+        if ($generate === true) {
+            unlink(Mage::getBaseDir('tmp') . '/egoi_export.csv');
+        }
+
+        $file = Mage::getBaseDir('tmp') . '/egoi.txt';
+        if (!is_file($file)) {
+            file_put_contents($file, '0');
+        }
+        $lastSync = (int)file_get_contents($file);
+
         $meta = Mage::getModel('newsletter/subscriber')->getCollection()
-            ->addFieldToFilter('subscriber_status', 1);
+            ->addFieldToFilter('subscriber_status', 1)
+            ->addFieldToFilter('subscriber_id', array('gteq' => $lastSync));
+
+        if ($meta->getSize() == 0) {
+            return true;
+        }
 
         $list = Mage::getModel('fidelitas/lists')->getList(true);
         $extra = Mage::getModel('fidelitas/extra')->getExtra();
 
-        $processNumber = 500;
-
-        if ($generate) {
-            $processNumber = 999999999999;
-        }
-
+        $processNumber = 200;
         $i = 0;
 
         try {
@@ -224,7 +237,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                 $core = Mage::getModel('newsletter/subscriber')
                     ->getCollection()
                     ->setPageSize($processNumber)
-                    ->setCurPage($i);
+                    ->addFieldToFilter('subscriber_status', 1)
+                    ->addFieldToFilter('subscriber_id', array('gteq' => $lastSync));
 
                 $subscribers = array();
                 $indexArray = array();
@@ -297,15 +311,19 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                                     $indexArray[] = $element->getData('extra_code');
                                 }
                             }
+                        } else {
+                            foreach ($extra as $element) {
+                                $data[$element->getData('extra_code')] = '';
+                            }
                         }
 
                         $data['status'] = 1;
                         $indexArray[] = 'status';
-
-
-                        if ($subI == 1) {
+                        if ($subI == 1 && $lastSync == 0) {
                             $subscribers[] = $indexArray;
                         }
+
+                        $lastSync = $subscriber->getId();
 
                         $subscribers[] = $data;
                     } catch (Exception $e) {
@@ -313,21 +331,40 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                 }
 
                 if ($generate === true) {
-                    return $subscribers;
+                    $fileExport = Mage::getBaseDir('tmp') . '/egoi_export.csv';
+                    $fp = fopen($fileExport, 'a');
+
+                    foreach ($subscribers as $fields) {
+                        fputcsv($fp, $fields, ';');
+                    }
+
+                    fclose($fp);
+                } else {
+
+                    $params = array(
+                        'apikey'        => Mage::getStoreConfig('fidelitas/config/api_key'),
+                        'plugin_key'    => self::PLUGIN_KEY,
+                        'listID'        => $list->getListnum(),
+                        'compareField'  => 'email',
+                        'operation'     => 2,
+                        'autoresponder' => 0,
+                        'notification'  => 0,
+                        'subscribers'   => $subscribers,
+                    );
+
+                    $this->processServiceResult($this->_client->addSubscriberBulk($params));
+
+                    if (count($subscribers) == 200) {
+                        $cron = Mage::getModel('cron/schedule');
+                        $data['status'] = 'pending';
+                        $data['job_code'] = 'fidelitas_sync_bulk';
+                        $data['scheduled_at'] = now();
+                        $data['created_at'] = now();
+                        $cron->setData($data)->save();
+                    }
                 }
 
-                $params = array(
-                    'apikey'        => Mage::getStoreConfig('fidelitas/config/api_key'),
-                    'plugin_key'    => self::PLUGIN_KEY,
-                    'listID'        => $list->getListnum(),
-                    'compareField'  => 'email',
-                    'operation'     => 2,
-                    'autoresponder' => 0,
-                    'notification'  => 0,
-                    'subscribers'   => $subscribers,
-                );
-
-                $this->processServiceResult($this->_client->addSubscriberBulk($params));
+                file_put_contents($file, $lastSync);
             }
 
         } catch (Exception $e) {

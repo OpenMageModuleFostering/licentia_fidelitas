@@ -76,6 +76,8 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         Mage::log('end', null, 'fidelitas-sync-subs.log', true);
 
+        $this->importCoreNewsletterSubscribers();
+
     }
 
     public function findCustomer($value, $attribute = 'entity_id', $billing = null)
@@ -115,6 +117,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             ->getCollection()
             ->addFieldToFilter('subscriber_status', 1);
 
+        $list = Mage::getModel('fidelitas/lists')->getList();
 
         /** @var Mage_Newsletter_Model_Subscriber $subscriber */
         foreach ($news as $subscriber) {
@@ -123,7 +126,6 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             }
 
             $data = array();
-            $list = Mage::getModel('fidelitas/lists')->getList();
 
             if ($this->subscriberExists('email', $subscriber->getEmail())) {
                 continue;
@@ -260,6 +262,8 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
                 }
                 if ($this->getData('status') == 0) {
                     $model->setData('status', 4);
+                } else {
+                    $model->setData('status', 1);
                 }
                 $model->editSubscriber();
 
@@ -286,9 +290,9 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         if (!$this->getData('inCron') && !Mage::registry('fidelitas_clean')) {
             $model->setData($data)->removeSubscriber();
-        }
 
-        Mage::getModel('newsletter/subscriber')->loadByEmail($data['email'])->delete();
+            Mage::getModel('newsletter/subscriber')->loadByEmail($data['email'])->delete();
+        }
 
         return parent::delete();
     }

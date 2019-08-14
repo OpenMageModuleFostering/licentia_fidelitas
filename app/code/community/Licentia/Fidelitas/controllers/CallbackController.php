@@ -25,20 +25,19 @@ class Licentia_Fidelitas_CallbackController extends Mage_Core_Controller_Front_A
         $data['inCron'] = true;
         $data['inCallback'] = true;
 
-        $newletter = Mage::getModel('newsletter/subscriber');
+        $newletter = Mage::getModel('fidelitas/subscribers');
         try {
             if ($add) {
-                $newletter->subscribe($data['email']);
+                $newletter->setData($data['email'])->save();
             }
 
             if ($remove) {
-                $newletter->loadByEmail($data['email'])->unsubscribe();
+                #$newletter->loadByEmail($data['email'])->unsubscribe();
             }
         } catch (Exception $e) {
 
         }
 
-        Mage::log($data, 3, 'egoi-callback.log');
     }
 
     protected function _object2array($data)

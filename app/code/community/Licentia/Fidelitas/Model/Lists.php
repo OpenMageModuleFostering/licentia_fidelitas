@@ -105,7 +105,7 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
         Mage::getModel('fidelitas/egoi')->setData($callback)->editApiCallback();
     }
 
-    public function getList($forceFields = false)
+    public function getList($forceFields = false, $listCheck = false)
     {
         $result = $this->getCollection()->getFirstItem();
 
@@ -124,15 +124,17 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
 
             $egoi = Mage::getModel('fidelitas/egoi')->getLists();
 
-            $ok = false;
-            foreach ($egoi->getData() as $list) {
-                if ($list['listnum'] == $result->getData('listnum')) {
-                    $ok = true;
-                    break;
+            if ($listCheck) {
+                $ok = false;
+                foreach ($egoi->getData() as $list) {
+                    if ($list['listnum'] == $result->getData('listnum')) {
+                        $ok = true;
+                        break;
+                    }
                 }
-            }
-            if (!$ok) {
-                return -1;
+                if (!$ok) {
+                    return -1;
+                }
             }
 
             $extra = Mage::getModel('fidelitas/egoi')
