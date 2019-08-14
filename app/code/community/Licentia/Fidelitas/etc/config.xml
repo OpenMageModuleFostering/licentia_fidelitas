@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Licentia_Fidelitas>
-            <version>2.7.0.1</version>
+            <version>2.7.1.3</version>
         </Licentia_Fidelitas>
     </modules>
     <frontend>
@@ -238,6 +238,14 @@
                     <model>fidelitas/egoi::sync</model>
                 </run>
             </fidelitas_sync>
+            <fidelitas_sync_subscribers>
+                <schedule>
+                    <cron_expr>0 3 * * 1</cron_expr>
+                </schedule>
+                <run>
+                    <model>fidelitas/subscribers::sync</model>
+                </run>
+            </fidelitas_sync_subscribers>
         </jobs>
     </crontab>
     <default>

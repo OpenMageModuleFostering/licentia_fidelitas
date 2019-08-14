@@ -76,7 +76,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         Mage::log('end', null, 'fidelitas-sync-subs.log', true);
 
-        $this->importCoreNewsletterSubscribers();
+        #$this->importCoreNewsletterSubscribers();
 
     }
 
@@ -172,7 +172,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         if ($customer) {
             $data['customer_id'] = $customer->getId();
-            $data['birth_date'] = $customer->getData('dob');
+            $data['birth_date'] =  substr($customer->getData('dob'), 0, 10);
             $data['first_name'] = $customer->getData('firstname');
             $data['last_name'] = $customer->getData('lastname');
 
@@ -255,6 +255,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
     public function updateFromNewsletterCore($event)
     {
+        /** @var Mage_Newsletter_Model_Subscriber $subscriber */
         $subscriber = $event->getDataObject();
         $email = $subscriber->getSubscriberEmail();
         $subscriber->setImportMode(true);
@@ -552,4 +553,35 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             array('JAMAICA', 'JM', '1-876'));
     }
 
+
+    public function sync()
+    {
+
+        $core = Mage::getModel('newsletter/subscriber')
+            ->getCollection()
+            ->addFieldToFilter('subscriber_status', 1);
+
+        /** @var Mage_Newsletter_Model_Subscriber $susbcriber */
+        foreach ($core as $susbcriber) {
+
+            /** @var Mage_Customer_Model_Customer $customer */
+            $customer = Mage::getModel('customer/customer')->load($susbcriber->getCustomerId());
+            $egoi = Mage::getModel('fidelitas/subscribers')->load($susbcriber->getEmail(), 'email');
+
+            if ($customer->getId()) {
+                $data['email'] = $customer->getEmail();
+                $data['customer_id'] = $customer->getId();
+                $data['birth_date'] =  substr($customer->getData('dob'), 0, 10);
+                $data['first_name'] = $customer->getData('firstname');
+                $data['last_name'] = $customer->getData('lastname');
+
+                if ($customer->getData('cellphone')) {
+                    $data['cellphone'] = $customer->getData('cellphone');
+                }
+            }
+
+            $egoi->addData($data)->save();
+
+        }
+    }
 }

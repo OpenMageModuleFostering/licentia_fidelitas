@@ -287,7 +287,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         $indexArray[] = 'cellphone';
 
                         if ($customer) {
-                            $data['birth_date'] = $customer->getData('dob');
+                            $data['birth_date'] =  substr($customer->getData('dob'), 0, 10);
                             $data['first_name'] = $customer->getData('firstname');
                             $data['last_name'] = $customer->getData('lastname');
 
