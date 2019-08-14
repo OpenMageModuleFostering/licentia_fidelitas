@@ -40,15 +40,18 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
     {
         try {
             $listnum = $this->getRequest()->getPost('list_id');
-            Mage::getModel('fidelitas/lists')->getList()->setData('listnum', $listnum)->save();
-            Mage::getModel('fidelitas/extra')->getCollection()->walk('delete');
-            Mage::getModel('fidelitas/lists')->getList(true);
 
-            /** @var Mage_Core_Model_Resource $resource */
-            $resource = Mage::getSingleton('core/resource');
-            $write = $resource->getConnection('core_write');
-            $write->update($resource->getTableName('fidelitas_subscribers'), array('list' => $listnum));
+            if ($listnum) {
+                Mage::getModel('fidelitas/lists')->getList()->setData('listnum', $listnum)->save();
+                Mage::getModel('fidelitas/extra')->getCollection()->walk('delete');
+                Mage::getModel('fidelitas/lists')->getList(true);
 
+                /** @var Mage_Core_Model_Resource $resource */
+                $resource = Mage::getSingleton('core/resource');
+                $write = $resource->getConnection('core_write');
+                $write->update($resource->getTableName('fidelitas_subscribers'), array('list' => $listnum));
+
+            }
             $this->_getSession()->addSuccess($this->__('List Updated. Please map the attributes to the new list'));
 
         } catch (Exception $e) {

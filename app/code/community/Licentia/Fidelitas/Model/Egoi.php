@@ -324,6 +324,29 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                             }
                         }
 
+                        $extraStore = Mage::getModel('fidelitas/extra')->getExtra()
+                            ->addFieldToFilter('attribute_code', 'store_id');
+
+                        if ($extraStore->count() == 1) {
+                            $extraStoreView = $extraStore->getFirstItem();
+
+                            if (!isset($data[$extraStoreView->getData('extra_code')]) ||
+                                $data[$extraStoreView->getData('extra_code')] == ''
+                            ) {
+
+                                /** @var Mage_Sales_Model_Order $order */
+                                $order = Mage::getModel('sales/order')->getCollection()
+                                    ->addFieldToFilter('customer_email', $subscriber->getEmail())
+                                    ->setPageSize(1)
+                                    ->getFirstItem();
+
+                                if ($order->getId()) {
+                                    $data[$extraStoreView->getData('extra_code')] = $order->getStoreId();
+                                }
+
+                            }
+                        }
+
                         $data['status'] = 1;
                         $indexArray[] = 'status';
                         if ($subI == 1 && $lastSync == 0) {
@@ -337,7 +360,6 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     }
                 }
 
-
                 if ($generate === true) {
 
                     if ($lastSync > 0) {
@@ -347,8 +369,16 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     $fileExport = Mage::getBaseDir('tmp') . '/egoi_export.csv';
                     $fp = fopen($fileExport, 'a');
 
+                    $i = 0;
                     foreach ($subscribers as $fields) {
+
+                        if ($i == 0) {
+                            fputcsv($fp, array_keys($fields), ';');
+                        }
+
                         fputcsv($fp, $fields, ';');
+
+                        $i++;
                     }
 
                     fclose($fp);

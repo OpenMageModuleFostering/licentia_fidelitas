@@ -167,6 +167,25 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             return false;
         }
 
+        /** @var Mage_Customer_Model_Customer $customer */
+        $customer = $this->findCustomer($data['email'], 'email');
+
+        if ($customer) {
+            $data['customer_id'] = $customer->getId();
+            $data['birth_date'] = $customer->getData('dob');
+            $data['first_name'] = $customer->getData('firstname');
+            $data['last_name'] = $customer->getData('lastname');
+
+            if ($customer->getData('cellphone')) {
+                $data['cellphone'] = $customer->getData('cellphone');
+            }
+        }
+
+        $this->addData($data);
+
+
+        return parent::save();
+
         $this->load($this->getEmail(), 'email');
 
         if (!$this->getOrigData() && $this->getId()) {
