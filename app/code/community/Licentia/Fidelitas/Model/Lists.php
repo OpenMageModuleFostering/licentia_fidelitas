@@ -23,16 +23,10 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
             if (isset($list['extra_fields']) && is_array($list['extra_fields'])) {
                 $i = 0;
                 foreach ($list['extra_fields'] as $field) {
-                    if (isset($field['ref']) && $field['ref'] == 'magento_store_id') {
+                    if (isset($field['ref']) && $field['ref'] == 'store_ud') {
                         $i++;
                     }
-                    if (isset($field['ref']) && $field['ref'] == 'magento_store') {
-                        $i++;
-                    }
-                    if (isset($field['ref']) && $field['ref'] == 'magento_locale') {
-                        $i++;
-                    }
-                    if ($i == 2) {
+                    if ($i == 1) {
                         $this->setData('listnum', $list['listnum']);
                         break 2;
                     }
@@ -93,7 +87,7 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
         }
 
         $store = Mage::app()->getStore();
-        $url = $store->getBaseUrl() . 'fidelitas/callback/';
+        $url = $store->getBaseUrl() . 'egoi/callback/';
 
         $callback = array();
         $callback['listID'] = $list->hasListnum() ? $list->getData('listnum') : $list->getData('listID');
@@ -128,30 +122,30 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
 
         if ($forceFields && $result->getData('listnum')) {
 
+            $egoi = Mage::getModel('fidelitas/egoi')->getLists();
+
+            $ok = false;
+            foreach ($egoi->getData() as $list) {
+                if ($list['listnum'] == $result->getData('listnum')) {
+                    $ok = true;
+                    break;
+                }
+            }
+            if (!$ok) {
+                return -1;
+            }
+
             $extra = Mage::getModel('fidelitas/egoi')
                 ->setData(array('listID' => $result->getData('listnum')))
                 ->getLists();
             $addExtra = true;
             $idMagentoStore = 0;
-            $idMagentoStoreId = 0;
-            $idMagentoLocale = 0;
+
             foreach ($extra->getData() as $list) {
                 if (isset($list['extra_fields']) && is_array($list['extra_fields'])) {
-                    $i = 0;
                     foreach ($list['extra_fields'] as $field) {
-                        if (isset($field['ref']) && $field['ref'] == 'magento_store_id') {
-                            $idMagentoStoreId = $field['id'];
-                            $i++;
-                        }
-                        if (isset($field['ref']) && $field['ref'] == 'magento_store') {
+                        if (isset($field['ref']) && $field['ref'] == 'store_id') {
                             $idMagentoStore = $field['id'];
-                            $i++;
-                        }
-                        if (isset($field['ref']) && $field['ref'] == 'magento_locale') {
-                            $idMagentoLocale = $field['id'];
-                            $i++;
-                        }
-                        if ($i == 3) {
                             $addExtra = false;
                             break 2;
                         }
@@ -163,38 +157,14 @@ class Licentia_Fidelitas_Model_Lists extends Mage_Core_Model_Abstract
                 Mage::getModel('fidelitas/extra')->addInitialFields($result->getData('listnum'));
             } else {
 
-                $existsLocale = Mage::getModel('fidelitas/extra')
-                    ->getCollection()
-                    ->addFieldToFilter('attribute_code', 'magento_locale')
-                    ->getFirstItem();
-
                 $existsStore = Mage::getModel('fidelitas/extra')
                     ->getCollection()
-                    ->addFieldToFilter('attribute_code', 'magento_store')
+                    ->addFieldToFilter('attribute_code', 'store_id')
                     ->getFirstItem();
-
-
-                $existsStoreId = Mage::getModel('fidelitas/extra')
-                    ->getCollection()
-                    ->addFieldToFilter('attribute_code', 'magento_store_id')
-                    ->getFirstItem();
-
-
-                if (!$existsLocale->getId()) {
-                    Mage::getModel('fidelitas/extra')
-                        ->setData(array('extra_code' => 'extra_' . $idMagentoLocale, 'attribute_code' => 'magento_locale'))
-                        ->save();
-                }
 
                 if (!$existsStore->getId()) {
                     Mage::getModel('fidelitas/extra')
-                        ->setData(array('extra_code' => 'extra_' . $idMagentoStore, 'attribute_code' => 'magento_store'))
-                        ->save();
-                }
-
-                if (!$existsStoreId->getId()) {
-                    Mage::getModel('fidelitas/extra')
-                        ->setData(array('extra_code' => 'extra_' . $idMagentoStoreId, 'attribute_code' => 'magento_store_id'))
+                        ->setData(array('extra_code' => 'extra_' . $idMagentoStore, 'attribute_code' => 'store_id'))
                         ->save();
                 }
 

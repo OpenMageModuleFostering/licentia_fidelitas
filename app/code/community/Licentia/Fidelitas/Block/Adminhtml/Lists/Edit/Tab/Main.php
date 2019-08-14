@@ -29,8 +29,9 @@ class Licentia_Fidelitas_Block_Adminhtml_Lists_Edit_Tab_Main extends Mage_Adminh
 
         if ($current->getId()) {
 
-            $remoteList = Mage::getModel('fidelitas/egoi')->getLists($current->getListnum())->getData('0');
-
+            $remoteList = Mage::getModel('fidelitas/egoi')->getLists($current->getListnum())->getData();
+            $remoteList = reset($remoteList);
+            $remoteList = reset($remoteList);
 
             $productAttributes = Mage::getResourceSingleton('customer/customer')
                 ->loadAllAttributes()
@@ -58,17 +59,11 @@ class Licentia_Fidelitas_Block_Adminhtml_Lists_Edit_Tab_Main extends Mage_Adminh
                 $attributes['addr_' . $field['value']] = $field['label'] . ' - (Addresss)';
             }
 
-            $attributes['static_store_id'] = $this->__("Store ID - (Global)");
-
-            if (isset($remoteList['extra_fields']) && count($remoteList['extra_fields'])>2) {
+            if (isset($remoteList['extra_fields'])) {
 
                 $fieldset2 = $form->addFieldset("map_form", array("legend" => $this->__("Map List Attributes")));
 
                 foreach ($remoteList['extra_fields'] as $field) {
-
-                    if ($field['ref'] == 'magento_store' || $field['ref'] == 'magento_store_id' || $field['ref'] == 'magento_locale') {
-                        continue;
-                    }
 
                     $fieldset2->addField("extra_" . $field['id'], "select", array(
                         "label"    => $this->__($field['ref']),

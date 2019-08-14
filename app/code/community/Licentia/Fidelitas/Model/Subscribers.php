@@ -92,7 +92,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             ->joinAttribute('country_id', 'customer_address/country_id', 'default_billing', null, 'left')
             ->joinAttribute($cellphoneField, 'customer_address/' . $cellphoneField, 'default_billing', null, 'left');
 
-        if ($billing) {
+        if ($billing && $cellphoneField != $billing && $attribute != $billing && 'country_id' != $billing) {
             $customers->joinAttribute($billing, 'customer_address/' . $billing, 'default_billing', null, 'left');
         }
 
@@ -125,7 +125,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             $data = array();
             $list = Mage::getModel('fidelitas/lists')->getList();
 
-            if ($this->subscriberExists('email', $subscriber->getEmail(), $list->getListnum())) {
+            if ($this->subscriberExists('email', $subscriber->getEmail())) {
                 continue;
             }
 
@@ -143,13 +143,12 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
     }
 
 
-    public function subscriberExists($field, $value, $list)
+    public function subscriberExists($field, $value)
     {
 
         $model = Mage::getModel('fidelitas/subscribers')
             ->getCollection()
-            ->addFieldToFilter($field, $value)
-            ->addFieldToFilter('list', $list);
+            ->addFieldToFilter($field, $value);
 
         if ($model->count() != 1) {
             return false;
@@ -183,27 +182,6 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         $extra = Mage::getModel('fidelitas/extra')->getExtra();
 
-        $storeId = $this->getStoreId();
-
-        $locale = Mage::getStoreConfig('general/locale/code', $storeId);
-        $language = Locale::getDisplayLanguage($locale);
-        foreach ($extra as $element) {
-            if ($element->getData('attribute_code') == 'magento_locale') {
-                $data[$element->getData('extra_code')] = $language;
-            }
-            if ($element->getData('attribute_code') == 'magento_store') {
-                $data[$element->getData('extra_code')] = Mage::getModel('adminhtml/system_store')->getStoreNameWithWebsite($storeId);
-            }
-            if ($element->getData('attribute_code') == 'magento_store_id') {
-                $data[$element->getData('extra_code')] = $storeId;
-            }
-
-            if (stripos($element->getData('attribute_code'), 'static_') !== false) {
-                $old = Mage::getModel('newsletter/subscriber')->loadByEmail($this->getEmail());
-                $data[$element->getData('extra_code')] = $this->getData(str_replace('static_', '', $old->getData('attribute_code')));
-            }
-        }
-
         if ($customer) {
             $data['customer_id'] = $customer->getId();
             $data['birth_date'] = $customer->getData('dob');
@@ -216,8 +194,13 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
             foreach ($extra as $element) {
 
-                if (stripos($element->getData('attribute_code'), 'static_') !== false) {
-                    $data[$element->getData('extra_code')] = $customer->getData(str_replace('static_', '', $element->getData('attribute_code')));
+                if ($this->getData($element->getData('attribute_code'))) {
+                    $data[$element->getData('extra_code')] = $this->getData($element->getData('attribute_code'));
+                    continue;
+                }
+
+                if ($customer->getData($element->getData('attribute_code'))) {
+                    $data[$element->getData('extra_code')] = $customer->getData($element->getData('attribute_code'));
                     continue;
                 }
 
@@ -229,13 +212,12 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
                     $attributeCode = $element->getData('attribute_code');
                 }
 
-                if (!$customer->getData($attributeCode)) {
-                    if ($billing) {
-                        $customer = $this->findCustomer($customer->getId(), 'entity_id', $attributeCode);
-                    } else {
-                        $customer = Mage::getModel('customer/customer')->load($customer->getId());
-                    }
+                if ($billing) {
+                    $customer = $this->findCustomer($customer->getId(), 'entity_id', $attributeCode);
+                } else {
+                    $customer = Mage::getModel('customer/customer')->load($customer->getId());
                 }
+
                 if ($customer->getData($attributeCode)) {
                     $data[$element->getData('extra_code')] = $customer->getData($attributeCode);
                 }
@@ -248,7 +230,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
 
         $this->addData($data);
 
-        $info = $this->subscriberExists('email', $this->getEmail(), $this->getData('list'));
+        $info = $this->subscriberExists('email', $this->getEmail());
 
         if ($info && isset($data['inCallback'])) {
             $this->setId($info->getId());
@@ -263,7 +245,7 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
         if ($info) {
             $data['subscriber'] = $info->getUid();
             $this->setId($info->getId());
-        } elseif ($info = $this->subscriberExists('subscriber_id', $this->getId(), $this->getData('list'))) {
+        } elseif ($info = $this->subscriberExists('subscriber_id', $this->getId())) {
             $data['subscriber'] = $info->getUid();
             $this->setId($info->getId());
         }
@@ -321,7 +303,9 @@ class Licentia_Fidelitas_Model_Subscribers extends Mage_Core_Model_Abstract
             return false;
         }
 
-        if (!$subscriber->getIsStatusChanged() && $subscriber->getOrigData('subscriber_status') == $subscriber->getData('subscriber_status')) {
+        if (!$subscriber->getIsStatusChanged() &&
+            $subscriber->getOrigData('subscriber_status') == $subscriber->getData('subscriber_status')
+        ) {
             return;
         }
 

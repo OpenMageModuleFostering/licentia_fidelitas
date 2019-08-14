@@ -40,7 +40,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
             $client = new Zend_XmlRpc_Client('http://api.e-goi.com/v2/xmlrpc.php');
             $result = $client->call('sendSMS', array($this->getDataKey()));
 
-            $this->processServiceResult($this->_client->sendSMS($this->getDataKey()));
+            #$this->processServiceResult($this->_client->sendSMS($this->getDataKey()));
+            $this->processServiceResult($result);
 
             Mage::log($this->getData(), 2, 'fidelitas-sms-data.log', true);
 
@@ -220,7 +221,6 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
             while ($i * $processNumber <= $meta->getSize()) {
 
                 $i++;
-
                 $core = Mage::getModel('newsletter/subscriber')
                     ->getCollection()
                     ->setPageSize($processNumber)
@@ -235,8 +235,6 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     $subI++;
 
                     try {
-                        $storeId = $subscriber->getStoreId();
-
                         $data = array();
 
                         $data['email'] = $subscriber->getEmail();
@@ -247,33 +245,9 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                             continue;
                         }
 
-                        $locale = Mage::getStoreConfig('general/locale/code', $storeId);
-                        $language = Locale::getDisplayLanguage($locale);
-
                         /** @var Licentia_Fidelitas_Model_Subscribers $fidelitas */
                         $fidelitas = Mage::getModel('fidelitas/subscribers')->load($subscriber->getEmail(), 'email');
                         $customer = $fidelitas->findCustomer($subscriber->getEmail(), 'email');
-
-                        foreach ($extra as $element) {
-                            if ($element->getData('attribute_code') == 'magento_locale') {
-                                $data[$element->getData('extra_code')] = $language;
-                                $indexArray[] = $element->getData('extra_code');
-                            }
-                            if ($element->getData('attribute_code') == 'magento_store') {
-                                $data[$element->getData('extra_code')] = Mage::getModel('adminhtml/system_store')->getStoreNameWithWebsite($storeId);
-                                $indexArray[] = $element->getData('extra_code');
-                            }
-                            if ($element->getData('attribute_code') == 'magento_store_id') {
-                                $data[$element->getData('extra_code')] = $storeId;
-                                $indexArray[] = $element->getData('extra_code');
-                            }
-
-                            if (stripos($element->getData('attribute_code'), 'static_') !== false) {
-                                $data[$element->getData('extra_code')] = $fidelitas->getData(str_replace('static_', '', $subscriber->getData('attribute_code')));
-                                $indexArray[] = $element->getData('extra_code');
-                            }
-                        }
-
 
                         $data['birth_date'] = '';
                         $indexArray[] = 'birth_date';
@@ -295,8 +269,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
                             foreach ($extra as $element) {
 
-                                if (stripos($element->getData('attribute_code'), 'static_') !== false) {
-                                    $data[$element->getData('extra_code')] = $customer->getData(str_replace('static_', '', $element->getData('attribute_code')));
+                                if ($customer->getData($element->getData('attribute_code'))) {
+                                    $data[$element->getData('extra_code')] = $customer->getData($element->getData('attribute_code'));
 
                                     $indexArray[] = $element->getData('extra_code');
                                     continue;
@@ -312,7 +286,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
 
                                 if (!$customer->getData($attributeCode)) {
                                     if ($billing) {
-                                        $customer = $this->findCustomer($customer->getId(), 'entity_id', $attributeCode);
+                                        $customer = $fidelitas->findCustomer($customer->getId(), 'entity_id', $attributeCode);
                                     } else {
                                         $customer = Mage::getModel('customer/customer')->load($customer->getId());
                                     }
@@ -326,19 +300,8 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                         }
 
                         $data['status'] = 1;
-                        /*
-                        $data['status'] = $subscriber->getStatus();
                         $indexArray[] = 'status';
-                        if ($subscriber->getStatus() == 4) {
-                            $data['status'] = 1;//Confirmed
-                        }
-                        if ($subscriber->getStatus() == 3) {
-                            $data['status'] = 2;
-                        }
-                        if ($subscriber->getStatus() == 2) {
-                            $data['status'] = 4;
-                        }
-                        */
+
 
                         if ($subI == 1) {
                             $subscribers[] = $indexArray;
@@ -360,6 +323,7 @@ class Licentia_Fidelitas_Model_Egoi extends Varien_Object
                     'compareField'  => 'email',
                     'operation'     => 2,
                     'autoresponder' => 0,
+                    'notification'  => 0,
                     'subscribers'   => $subscribers,
                 );
 

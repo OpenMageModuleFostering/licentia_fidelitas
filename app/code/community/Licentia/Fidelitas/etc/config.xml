@@ -3,12 +3,12 @@
 <config>
     <modules>
         <Licentia_Fidelitas>
-            <version>2.3.0.2</version>
+            <version>2.5.0.5</version>
         </Licentia_Fidelitas>
     </modules>
     <frontend>
         <events>
-            <sales_order_place_after>
+            <sales_order_save_commit_after>
                 <observers>
                     <update_subscriber_auto>
                         <class>fidelitas/observer</class>
@@ -19,7 +19,7 @@
                         <method>newOrder</method>
                     </fidelitas_update_autoresponders>
                 </observers>
-            </sales_order_place_after>
+            </sales_order_save_commit_after>
             <checkout_onepage_controller_success_action>
                 <observers>
                     <egoimmerce_order_success>
@@ -42,7 +42,7 @@
                 <use>standard</use>
                 <args>
                     <module>Licentia_Fidelitas</module>
-                    <frontName>fidelitas</frontName>
+                    <frontName>egoi</frontName>
                 </args>
             </fidelitas>
         </routers>
@@ -73,10 +73,6 @@
                         <class>fidelitas/autoresponders</class>
                         <method>changeStatus</method>
                     </fidelitas_autoresponders_status>
-                </observers>
-            </sales_order_save_commit_after>
-            <sales_order_save_commit_after>
-                <observers>
                     <fidelitas_autoresponders_new_order>
                         <class>fidelitas/autoresponders</class>
                         <method>newOrder</method>

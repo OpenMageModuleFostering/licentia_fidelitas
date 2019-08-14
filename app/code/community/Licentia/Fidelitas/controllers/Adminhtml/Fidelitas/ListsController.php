@@ -20,6 +20,11 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_ListsController extends Mage_Adminh
     public function indexAction()
     {
 
+        $list = Mage::getModel('fidelitas/lists')->getList();
+
+        $this->_redirect('*/*/edit', array('id' => $list->getId()));
+        return;
+
         $this->_title($this->__('E-Goi'))->_title($this->__('Lists'));
         $this->_initAction();
         $this->_addContent($this->getLayout()->createBlock('fidelitas/adminhtml_lists'));

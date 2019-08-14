@@ -27,7 +27,11 @@ class Licentia_Fidelitas_Adminhtml_Fidelitas_AccountController extends Mage_Admi
             return;
         }
 
-        Mage::getModel('fidelitas/lists')->getList(true);
+        $okList = Mage::getModel('fidelitas/lists')->getList(true);
+
+        if ($okList == -1) {
+            $this->_getSession()->addError($this->__('WARNING: We cannot find your E-Goi List Mapped to this Store. If this errors continues, please use the section on your right "Clear Data" to disconnect and start the mapping process again'));
+        }
 
         $this->_initAction();
         $this->_addContent($this->getLayout()->createBlock('fidelitas/adminhtml_account'));

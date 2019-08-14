@@ -10,11 +10,6 @@
                     <sort_order>10</sort_order>
                     <action>adminhtml/fidelitas_account</action>
                 </account>
-                <lists translate="title" module="fidelitas">
-                    <title>List</title>
-                    <sort_order>10</sort_order>
-                    <action>adminhtml/fidelitas_lists</action>
-                </lists>
                 <subscribers>
                     <title>Subscribers</title>
                     <sort_order>50</sort_order>
@@ -35,6 +30,11 @@
                     <sort_order>80</sort_order>
                     <action>adminhtml/fidelitas_account/support</action>
                 </support>
+                <lists translate="title" module="fidelitas">
+                    <title>Map Attributes/Extra Fields</title>
+                    <sort_order>85</sort_order>
+                    <action>adminhtml/fidelitas_lists</action>
+                </lists>
                 <configuration>
                     <title>Configuration</title>
                     <sort_order>90</sort_order>
@@ -55,10 +55,6 @@
                                 <title>My Account</title>
                                 <sort_order>10</sort_order>
                             </account>
-                            <lists>
-                                <title>List</title>
-                                <sort_order>10</sort_order>
-                            </lists>
                             <subscribers>
                                 <title>Subscribers</title>
                                 <sort_order>50</sort_order>
@@ -71,6 +67,10 @@
                                 <title>SMS Autoresponders Log</title>
                                 <sort_order>70</sort_order>
                             </events>
+                            <lists>
+                                <title>Map Attributes/Extra Fields</title>
+                                <sort_order>85</sort_order>
+                            </lists>
                             <support>
                                 <title>Support</title>
                                 <sort_order>80</sort_order>

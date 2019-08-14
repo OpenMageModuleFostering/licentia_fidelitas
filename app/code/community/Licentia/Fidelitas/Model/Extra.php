@@ -11,9 +11,7 @@ class Licentia_Fidelitas_Model_Extra extends Mage_Core_Model_Abstract
 
     public function addInitialFields($list = false)
     {
-        $this->addField('magento_locale', $list);
-        $this->addField('magento_store', $list);
-        $this->addField('magento_store_id', $list);
+        $this->addField('store_id', $list);
     }
 
 
@@ -26,7 +24,6 @@ class Licentia_Fidelitas_Model_Extra extends Mage_Core_Model_Abstract
         $extra = Mage::getModel('fidelitas/egoi')
             ->setData(array('listID' => $list))
             ->getLists();
-
 
         foreach ($extra->getData() as $extraField) {
             if (isset($extraField['extra_fields']) && is_array($extraField['extra_fields'])) {
@@ -53,10 +50,7 @@ class Licentia_Fidelitas_Model_Extra extends Mage_Core_Model_Abstract
 
     public function updateExtra($data, $system = 0)
     {
-        $collection = $this->getCollection()
-            ->addFieldToFilter('attribute_code', array('neq' => 'magento_locale'))
-            ->addFieldToFilter('attribute_code', array('neq' => 'magento_store_id'))
-            ->addFieldToFilter('attribute_code', array('neq' => 'magento_store'));
+        $collection = $this->getCollection();
 
         foreach ($collection as $item) {
             $item->delete();
@@ -77,7 +71,7 @@ class Licentia_Fidelitas_Model_Extra extends Mage_Core_Model_Abstract
         }
     }
 
-    public function getExtra($system = 0)
+    public function getExtra()
     {
         $collection = $this->getCollection();
         foreach ($collection as $item) {

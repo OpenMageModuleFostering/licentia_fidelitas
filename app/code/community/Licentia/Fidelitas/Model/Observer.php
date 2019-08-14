@@ -32,9 +32,8 @@ class Licentia_Fidelitas_Model_Observer
                 return false;
             }
 
-            $email = $order->getCustomerEmail();
-            Mage::getModel('newsletter/subscriber')->subscribe($email);
-            
+            Mage::getModel('newsletter/subscriber')->subscribe($order->getCustomerEmail());
+
         } catch (Exception $e) {
             Mage::logException($e);
         }
