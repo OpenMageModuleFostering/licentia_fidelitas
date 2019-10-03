@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/Licentia_Fidelitas",
+    "name": "OpenMageModuleFostering\/Licentia_Fidelitas",
     "type": "magento-module",
     "license": "Creative-Commons----Attribution-NonCommercial-4.0-International-",
     "homepage": "",
     "description": "Email marketing",
     "authors": [
-    {
-        "name": "bento",
-        "email": "bento@licentia.pt"
-    }
-],
+        {
+            "name": "bento",
+            "email": "bento@licentia.pt"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
